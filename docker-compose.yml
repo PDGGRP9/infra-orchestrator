@@ -20,15 +20,15 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-bracelet_connecte}
       POSTGRES_USER: ${POSTGRES_USER:-bracelet}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bracelet}
-  # backend:
-  #   image: ghcr.io/pdggrp9/backend:latest
-  #   depends_on:
-  #     - db
-  #     - mqtt-broker
-  # frontend:
-  #   image: ghcr.io/pdggrp9/frontend:latest
-  #   ports:
-  #     - "3000:80"
+  backend:
+    image: ghcr.io/pdggrp9/webapp-backend:latest
+    depends_on:
+      - db
+      - mqtt-broker
+  frontend:
+    image: ghcr.io/pdggrp9/webapp-frontend:latest
+    ports:
+      - "3000:80"
 
 volumes:
   mqtt-config:
