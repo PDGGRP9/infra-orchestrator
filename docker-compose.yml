@@ -1,6 +1,6 @@
 services:
   mqtt-broker:
-    image: ${MQTT_BROKER_IMAGE:-ghcr.io/toi/infra-broker:latest}
+    image: ${MQTT_BROKER_IMAGE:-ghcr.io/pdggrp9/infra-broker:latest}
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -12,7 +12,7 @@ services:
       - mqtt-data:/mosquitto/data
       - mqtt-log:/mosquitto/log
   db:
-    image: ${DB_IMAGE:-ghcr.io/toi/infra-db:latest}
+    image: ${DB_IMAGE:-ghcr.io/pdggrp9/infra-db:latest}
     restart: unless-stopped
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -20,15 +20,15 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-bracelet_connecte}
       POSTGRES_USER: ${POSTGRES_USER:-bracelet}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bracelet}
-  backend:
-    image: ghcr.io/toi/backend:latest
-    depends_on:
-      - db
-      - mqtt-broker
-  frontend:
-    image: ghcr.io/toi/frontend:latest
-    ports:
-      - "3000:80"
+  # backend:
+  #   image: ghcr.io/pdggrp9/backend:latest
+  #   depends_on:
+  #     - db
+  #     - mqtt-broker
+  # frontend:
+  #   image: ghcr.io/pdggrp9/frontend:latest
+  #   ports:
+  #     - "3000:80"
 
 volumes:
   mqtt-config:
