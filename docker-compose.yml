@@ -1,0 +1,23 @@
+services:
+  mqtt-broker:
+    image: ghcr.io/toi/mqtt-broker:latest
+    ports:
+      - "1883:1883"
+  db:
+    image: postgres:16
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=...
+  backend:
+    image: ghcr.io/toi/backend:latest
+    depends_on:
+      - db
+      - mqtt-broker
+  frontend:
+    image: ghcr.io/toi/frontend:latest
+    ports:
+      - "3000:80"
+
+volumes:
+  db-data:
