@@ -11,9 +11,43 @@ services:
       - mqtt-config:/mosquitto/config
       - mqtt-data:/mosquitto/data
       - mqtt-log:/mosquitto/log
+  fake-emitter:
+    build: ./fake-emitter
+    restart: unless-stopped
+    depends_on:
+      - mqtt-broker
+    environment:
+      MQTT_HOST: ${MQTT_HOST:-mqtt-broker}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USER: ${MQTT_USER:-mqtt}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-mqtt}
+      MQTT_TOPIC: ${MQTT_TOPIC:-bracelets/fake-bracelet-001/measurements}
+      DEVICE_UID: ${DEVICE_UID:-11111111-1111-1111-1111-111111111111}
+      SERIAL_NUMBER: ${SERIAL_NUMBER:-FAKE-BRACELET-001}
+      DISPLAY_NAME: ${DISPLAY_NAME:-Bracelet de test}
+      EMIT_INTERVAL_SECONDS: ${EMIT_INTERVAL_SECONDS:-5}
+  mqtt-db-bridge:
+    image: ${MQTT_DB_BRIDGE_IMAGE:-ghcr.io/pdggrp9/infra-bridge:latest}
+    restart: unless-stopped
+    depends_on:
+      - db
+      - mqtt-broker
+    environment:
+      MQTT_HOST: ${MQTT_HOST:-mqtt-broker}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USER: ${MQTT_USER:-mqtt}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-mqtt}
+      MQTT_TOPIC: ${MQTT_TOPIC:-bracelets/+/measurements}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${POSTGRES_DB:-bracelet_connecte}
+      DB_USER: ${POSTGRES_USER:-bracelet}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-bracelet}
   db:
     image: ${DB_IMAGE:-ghcr.io/pdggrp9/infra-db:latest}
     restart: unless-stopped
+    ports:
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
