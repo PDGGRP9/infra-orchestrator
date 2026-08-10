@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 
-import paho.mqtt.client as mqtt
+import requests
 
 
 @dataclass
@@ -27,17 +27,13 @@ def bounded(value: float, minimum: float, maximum: float) -> float:
 
 class FakeBraceletEmitter:
     def __init__(self) -> None:
-        self.mqtt_host = os.getenv("MQTT_HOST", "mqtt-broker")
-        self.mqtt_port = int(os.getenv("MQTT_PORT", "1883"))
-        self.mqtt_user = os.getenv("MQTT_USER", "mqtt")
-        self.mqtt_password = os.getenv("MQTT_PASSWORD", "mqtt")
-        self.topic = os.getenv("MQTT_TOPIC", "bracelets/fake-bracelet-001/measurements")
+        self.backend_url = os.getenv("BACKEND_URL", "http://backend:8000")
+        self.endpoint = os.getenv("BACKEND_DATA_ENDPOINT", "/api/datas")
         self.device_uid = os.getenv("DEVICE_UID", "11111111-1111-1111-1111-111111111111")
         self.serial_number = os.getenv("SERIAL_NUMBER", "FAKE-BRACELET-001")
         self.display_name = os.getenv("DISPLAY_NAME", "Bracelet de test")
         self.interval_seconds = float(os.getenv("EMIT_INTERVAL_SECONDS", "5"))
-        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="fake-emitter")
-        self.client.username_pw_set(self.mqtt_user, self.mqtt_password)
+        self.session = requests.Session()
 
     def build_payload(self, sequence: int) -> dict[str, object]:
         base_heart_rate = 68 + 10 * random.random()
@@ -67,7 +63,7 @@ class FakeBraceletEmitter:
             "step_count": step_count,
             "motion_level": motion_level,
             "signal_quality": signal_quality,
-            "source_topic": self.topic,
+            "source_topic": f"http://fake-emitter{self.endpoint}",
             "raw_payload": {
                 "sequence": sequence,
                 "red_ppg": red_ppg,
@@ -81,19 +77,18 @@ class FakeBraceletEmitter:
 
         while True:
             try:
-                self.client.connect(self.mqtt_host, self.mqtt_port, keepalive=60)
-                self.client.loop_start()
-                while True:
-                    payload = self.build_payload(sequence)
-                    self.client.publish(self.topic, json.dumps(payload), qos=1, retain=False)
-                    sequence += 1
-                    time.sleep(self.interval_seconds)
+                payload = self.build_payload(sequence)
+                response = self.session.post(
+                    f"{self.backend_url}{self.endpoint}",
+                    json=payload,
+                    timeout=10,
+                )
+                response.raise_for_status()
+                sequence += 1
+                time.sleep(self.interval_seconds)
             except Exception as exc:
-                print(f"MQTT unavailable, retrying: {exc}")
+                print(f"Backend unavailable, retrying: {exc}")
                 time.sleep(3)
-            finally:
-                self.client.loop_stop()
-                self.client.disconnect()
 
 
 def main() -> None:
