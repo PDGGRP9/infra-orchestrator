@@ -1,7 +1,0 @@
-services:
-  frontend:
-    build:
-      context: ../webapp-frontend
-  backend:
-    build:
-      context: ../webapp-backend
