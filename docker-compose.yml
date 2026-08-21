@@ -10,11 +10,17 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-bracelet_connecte}
       POSTGRES_USER: ${POSTGRES_USER:-bracelet}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bracelet}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bracelet} -d ${POSTGRES_DB:-bracelet_connecte}"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
   backend:
     image: ${WEBAPP_BACKEND_IMAGE:-ghcr.io/pdggrp9/webapp-backend:latest}
     restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     expose:
       - "8000"
     environment:
