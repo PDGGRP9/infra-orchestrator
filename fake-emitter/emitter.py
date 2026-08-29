@@ -6,8 +6,11 @@ import random
 import time
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import requests
+
+LOCAL_ZONE = ZoneInfo("Europe/Zurich")
 
 
 @dataclass
@@ -15,10 +18,6 @@ class Sample:
     sample_type: str
     sample_index: int
     sample_value: float
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def bounded(value: float, minimum: float, maximum: float) -> float:
@@ -36,10 +35,16 @@ class FakeBraceletEmitter:
         self.session = requests.Session()
 
     def build_payload(self, sequence: int) -> dict[str, object]:
+        now = datetime.now(timezone.utc)
         base_heart_rate = 68 + 10 * random.random()
         heart_rate = int(bounded(base_heart_rate + random.uniform(-6, 6), 45, 180))
         spo2 = round(bounded(97.5 + random.uniform(-1.2, 0.8), 90, 100), 1)
-        step_count = max(0, sequence * random.randint(1, 3))
+        # A daily step count, like a real pedometer: it only grows through the day and
+        # resets at local midnight, instead of climbing forever across days.
+        local_now = now.astimezone(LOCAL_ZONE)
+        local_midnight = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_fraction = (local_now - local_midnight).total_seconds() / 86400
+        step_count = int(day_fraction * 10000)
         motion_level = round(bounded(random.uniform(0.05, 1.0), 0.0, 1.0), 3)
         signal_quality = int(bounded(88 + random.uniform(-18, 8), 0, 100))
         red_ppg = round(1800 + random.uniform(-120, 120), 3)
@@ -57,7 +62,7 @@ class FakeBraceletEmitter:
             "device_uid": self.device_uid,
             "serial_number": self.serial_number,
             "display_name": self.display_name,
-            "captured_at": utc_now(),
+            "captured_at": now.isoformat(),
             "heart_rate_bpm": heart_rate,
             "spo2_percent": spo2,
             "step_count": step_count,

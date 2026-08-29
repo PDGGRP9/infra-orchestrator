@@ -1,0 +1,10 @@
+services:
+  db:
+    build:
+      context: ../infra-db
+  frontend:
+    build:
+      context: ../webapp-frontend
+  backend:
+    build:
+      context: ../webapp-backend
