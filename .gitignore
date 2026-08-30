@@ -44,3 +44,6 @@ terraform.rc
 # planout
 
 docker-compose.override.yml
+
+# Secrets de déploiement (garder .env.example versionné)
+.env
