@@ -37,15 +37,40 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-bracelet}
       # Single-origin via le proxy nginx du front : CORS non utilisé par le
       # navigateur. Renseigné uniquement si un client tape le backend en direct.
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8080}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://localhost}
+      # TLS terminé par Caddy : il transmet X-Forwarded-Proto=https, Django doit
+      # le croire pour reconstruire des URL absolues en https.
+      SECURE_PROXY_SSL_HEADER: ${SECURE_PROXY_SSL_HEADER:-HTTP_X_FORWARDED_PROTO,https}
+      # HSTS : 0 pour commencer (le temps de valider le certificat), puis passer
+      # à 31536000 dans .env une fois le HTTPS stable.
+      SECURE_HSTS_SECONDS: ${SECURE_HSTS_SECONDS:-0}
   frontend:
     image: ${WEBAPP_FRONTEND_IMAGE:-ghcr.io/pdggrp9/webapp-frontend:0.2.0}
     restart: unless-stopped
     depends_on:
       - backend
-    # L'app entière est servie ici (HTML + proxy /api). HTTP sur 8080.
+    # Sert la SPA + proxifie /api vers backend:8000. Plus publié directement :
+    # Caddy est le seul point d'entrée public (80/443). HTTP interne sur 80.
+    expose:
+      - "80"
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    # Unique point d'entrée public. Termine le TLS (Let's Encrypt automatique)
+    # et redirige 80 -> 443. Reverse proxy vers le conteneur frontend.
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?definir SITE_DOMAIN dans .env}
+      ACME_EMAIL: ${ACME_EMAIL:?definir ACME_EMAIL dans .env}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
   fake-emitter:
     build: ./fake-emitter
     restart: unless-stopped
@@ -62,3 +87,5 @@ services:
 
 volumes:
   db-data:
+  caddy-data:
+  caddy-config:
