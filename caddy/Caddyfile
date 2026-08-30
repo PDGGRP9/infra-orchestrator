@@ -1,0 +1,20 @@
+# Reverse proxy + terminaison TLS pour la stack bracelet connecté.
+#
+# {$SITE_DOMAIN} / {$ACME_EMAIL} sont injectés par docker-compose depuis .env.
+# Caddy obtient et renouvelle seul un certificat Let's Encrypt (challenge
+# HTTP-01 sur le port 80) et redirige automatiquement 80 -> 443.
+{
+	email {$ACME_EMAIL}
+	# Pour tester sans consommer le quota Let's Encrypt, décommenter :
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	# Tout est servi par le conteneur frontend (SPA + proxy /api -> backend).
+	reverse_proxy frontend:80
+
+	# HSTS : activer une fois le certificat validé et le HTTPS stable.
+	# header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+}
