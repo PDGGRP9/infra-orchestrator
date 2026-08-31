@@ -1,0 +1,14 @@
+# Toujours inclus par dev.sh. Évite la course db/backend au démarrage :
+# le backend attend que Postgres réponde vraiment avant de migrer.
+services:
+  db:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bracelet} -d ${POSTGRES_DB:-bracelet_connecte}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+  backend:
+    depends_on:
+      db:
+        condition: service_healthy
