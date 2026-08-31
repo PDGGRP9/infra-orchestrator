@@ -1,0 +1,6 @@
+services:
+  backend:
+    build:
+      context: ../webapp-backend
+    image: pdg-local/webapp-backend:dev
+    pull_policy: build

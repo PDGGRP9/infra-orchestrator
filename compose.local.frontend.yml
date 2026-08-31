@@ -1,0 +1,6 @@
+services:
+  frontend:
+    build:
+      context: ../webapp-frontend
+    image: pdg-local/webapp-frontend:dev   # tag local -> n'écrase pas ghcr.io/pdggrp9/webapp-frontend
+    pull_policy: build

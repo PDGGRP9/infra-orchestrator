@@ -1,0 +1,6 @@
+services:
+  db:
+    build:
+      context: ../infra-db
+    image: pdg-local/infra-db:dev
+    pull_policy: build

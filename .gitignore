@@ -44,3 +44,6 @@ terraform.rc
 # planout
 
 docker-compose.override.yml
+# fichiers env locaux / VM
+.env
+.env.*
