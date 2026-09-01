@@ -71,19 +71,6 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
-  fake-emitter:
-    build: ./fake-emitter
-    restart: unless-stopped
-    depends_on:
-      - backend
-    # Données de démo. Désactiver avec : docker compose up -d --scale fake-emitter=0
-    environment:
-      BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
-      BACKEND_DATA_ENDPOINT: ${BACKEND_DATA_ENDPOINT:-/api/datas}
-      DEVICE_UID: ${DEVICE_UID:-11111111-1111-1111-1111-111111111111}
-      SERIAL_NUMBER: ${SERIAL_NUMBER:-FAKE-BRACELET-001}
-      DISPLAY_NAME: ${DISPLAY_NAME:-Bracelet de test}
-      EMIT_INTERVAL_SECONDS: ${EMIT_INTERVAL_SECONDS:-5}
 
 volumes:
   db-data:

@@ -1,6 +1,6 @@
 # Déploiement sur la VM (HTTPS)
 
-Stack : PostgreSQL + backend Django + frontend (nginx) + Caddy + fake-emitter.
+Stack : PostgreSQL + backend Django + frontend (nginx) + Caddy.
 Tout est servi en **HTTPS sur le port 443** de la VM. Caddy obtient et renouvelle
 seul un certificat Let's Encrypt et redirige `80` -> `443`.
 
@@ -12,7 +12,6 @@ navigateur ──https──> :443  Caddy (terminaison TLS, Let's Encrypt)
                                     ├─ /       fichiers statiques (SPA)
                                     └─ /api/   proxy ─> backend:8000 (réseau interne)
 backend ─> db:5432 (réseau interne)
-fake-emitter ─> backend:8000 (réseau interne, données de démo)
 ```
 
 Le backend et le frontend ne sont **pas** exposés publiquement : seul Caddy
@@ -97,7 +96,6 @@ puis `docker compose up -d backend`. (Optionnel : décommenter la ligne
 docker compose logs -f backend            # logs applicatifs
 docker compose logs -f caddy              # TLS / ACME
 docker compose down                       # stop (garde les volumes)
-docker compose up -d --scale fake-emitter=0   # sans données de démo
 # psql via tunnel :
 ssh -L 5432:127.0.0.1:5432 user@vm    # puis: psql -h localhost -U bracelet bracelet_connecte
 ```
