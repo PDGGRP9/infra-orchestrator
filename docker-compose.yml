@@ -34,34 +34,6 @@ services:
       - backend
     ports:
       - "3000:80"
-  fake-emitter:
-    build: ./fake-emitter
-    restart: unless-stopped
-    depends_on:
-      - backend
-    environment:
-      BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
-      BACKEND_DATA_ENDPOINT: ${BACKEND_DATA_ENDPOINT:-/api/datas}
-      DEVICE_UID: ${DEVICE_UID:-11111111-1111-1111-1111-111111111111}
-      SERIAL_NUMBER: ${SERIAL_NUMBER:-FAKE-BRACELET-001}
-      DISPLAY_NAME: ${DISPLAY_NAME:-Bracelet de test}
-      EMIT_INTERVAL_SECONDS: ${EMIT_INTERVAL_SECONDS:-5}
-  # Keeps Thomas's demo account (seeded with 7 days of history for dashboard testing)
-  # trickling in fresh measurements too, so its "last 24h" chart never goes stale the
-  # way a one-shot seed does — otherwise the chart's right edge falls further behind
-  # "now" the longer the stack has been running since the last reseed.
-  fake-emitter-thomas:
-    build: ./fake-emitter
-    restart: unless-stopped
-    depends_on:
-      - backend
-    environment:
-      BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
-      BACKEND_DATA_ENDPOINT: /api/datas
-      DEVICE_UID: 33333333-3333-3333-3333-333333333333
-      SERIAL_NUMBER: FAKE-BRACELET-003
-      DISPLAY_NAME: Bracelet Thomas
-      EMIT_INTERVAL_SECONDS: "30"
 
 volumes:
   db-data:
